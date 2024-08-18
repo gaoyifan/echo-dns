@@ -19,18 +19,20 @@ class IPResolver(BaseResolver):
 
         try:
             if qtype == QTYPE.TXT:
-                client_info = [f"FROM {src_addr}:{src_port}"]
+                # Client IP address and port
+                txt_records = [f"FROM {src_addr}:{src_port}"]
 
-                # Extract ECS option from request
+                # ECS option
                 parsed_request = from_wire(handler.request[0])
-                client_info += [f"ECS {ecs.address}/{ecs.srclen}" for ecs in parsed_request.options if isinstance(ecs, ECSOption)]
+                txt_records += [f"ECS {ecs.address}/{ecs.srclen}" for ecs in parsed_request.options if isinstance(ecs, ECSOption)]
 
-                txt_records = client_info + [parsed_request.to_text().replace('\n', '|')[:255]]
-                for txt in txt_records:
-                    reply.add_answer(RR(qname, QTYPE.TXT, rdata=TXT(txt)))
+                # Raw request
+                txt_records += [parsed_request.to_text().replace('\n', '|')[:255]]
+
+                for record in txt_records:
+                    reply.add_answer(RR(qname, QTYPE.TXT, rdata=TXT(record)))
             elif qtype == QTYPE.A:
-                a_record = A(src_addr)
-                reply.add_answer(RR(qname, QTYPE.A, rdata=a_record))
+                reply.add_answer(RR(qname, QTYPE.A, rdata=A(src_addr)))
             elif qtype == QTYPE.AAAA:
                 # Handle conversion of IPv4 to IPv4-mapped IPv6 address
                 if '.' in src_addr:
