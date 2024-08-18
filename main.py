@@ -17,19 +17,22 @@ class IPResolver(BaseResolver):
 
         client_info = f";; FROM {src_addr}:{src_port}"
 
-        if qtype == QTYPE.TXT:
-            txt_records = [client_info] + str(request).splitlines()
-            for txt in txt_records:
-                reply.add_answer(RR(qname, QTYPE.TXT, rdata=TXT(txt)))
-        elif qtype == QTYPE.A:
-            a_record = A(src_addr)
-            reply.add_answer(RR(qname, QTYPE.A, rdata=a_record))
-        elif qtype == QTYPE.AAAA:
-            # Handle conversion of IPv4 to IPv4-mapped IPv6 address
-            if '.' in src_addr:
-                v4_octets = map(int, src_addr.split('.'))
-                src_addr = "::ffff:{:02x}{:02x}:{:02x}{:02x}".format(*v4_octets)
-            reply.add_answer(RR(qname, QTYPE.AAAA, rdata=AAAA(src_addr)))
+        try:
+            if qtype == QTYPE.TXT:
+                txt_records = [client_info] + str(request).splitlines()
+                for txt in txt_records:
+                    reply.add_answer(RR(qname, QTYPE.TXT, rdata=TXT(txt)))
+            elif qtype == QTYPE.A:
+                a_record = A(src_addr)
+                reply.add_answer(RR(qname, QTYPE.A, rdata=a_record))
+            elif qtype == QTYPE.AAAA:
+                # Handle conversion of IPv4 to IPv4-mapped IPv6 address
+                if '.' in src_addr:
+                    v4_octets = map(int, src_addr.split('.'))
+                    src_addr = "::ffff:{:02x}{:02x}:{:02x}{:02x}".format(*v4_octets)
+                reply.add_answer(RR(qname, QTYPE.AAAA, rdata=AAAA(src_addr)))
+        except:
+            reply.header.rcode = RCODE.NXDOMAIN
 
         return reply
 
