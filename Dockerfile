@@ -2,7 +2,7 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir dnslib
+RUN pip install --no-cache-dir dnslib dnspython
 
 EXPOSE 53/udp 53/tcp
 

@@ -1,3 +1,5 @@
+from dns.edns import ECSOption
+from dns.message import from_wire
 from dnslib import *
 from dnslib.server import DNSServer, BaseResolver, DNSLogger
 
@@ -15,11 +17,15 @@ class IPResolver(BaseResolver):
         if src_addr.startswith('::ffff:'):
             src_addr = src_addr[7:]
 
-        client_info = f";; FROM {src_addr}:{src_port}"
-
         try:
             if qtype == QTYPE.TXT:
-                txt_records = [client_info] + str(request).splitlines()
+                client_info = [f"FROM {src_addr}:{src_port}"]
+
+                # Extract ECS option from request
+                parsed_request = from_wire(handler.request[0])
+                client_info += [f"ECS {ecs.address}/{ecs.srclen}" for ecs in parsed_request.options if isinstance(ecs, ECSOption)]
+
+                txt_records = client_info + [parsed_request.to_text().replace('\n', '|')[:255]]
                 for txt in txt_records:
                     reply.add_answer(RR(qname, QTYPE.TXT, rdata=TXT(txt)))
             elif qtype == QTYPE.A:
