@@ -1,0 +1,3 @@
+myip   IN   LUA   A   "who:toString()"
+myip   IN   LUA   AAAA   "; if who:isIPv4() then return '::ffff:' .. who:toString() else return who:toString() end"
+myip   IN   LUA   TXT   "; local res = {'FROM ' .. who:toStringWithPort()}; if not ecswho:empty() then table.insert(res, 'ECS ' .. ecswho:toString()) end; table.insert(res, string.format('ID:%s RD:%d CD:%d DO:%d PKT:%d TCP:%d QNAME:%s', tostring(dh:getID()), dh:getRD() and 1 or 0, dh:getCD() and 1 or 0, dnssecOK and 1 or 0, ednsPKTSize, tcp and 1 or 0, qname:toString())); return res"
